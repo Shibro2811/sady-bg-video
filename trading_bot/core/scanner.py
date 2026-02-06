@@ -102,10 +102,10 @@ class StockScanner:
             logger.error(f"Error scanning {symbol}: {e}")
             return None
 
-    def scan_all(self) -> List[AggregatedSignal]:
+    def scan_all(self, force: bool = False) -> List[AggregatedSignal]:
         """Scan all symbols and return actionable signals."""
-        if not is_valid_entry_time():
-            logger.info("Outside valid trading hours, skipping scan")
+        if not force and not is_valid_entry_time():
+            logger.info("Outside valid trading hours, skipping scan (use --force to override)")
             return []
 
         start_time = time.time()

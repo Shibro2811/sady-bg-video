@@ -54,7 +54,7 @@ def build_notifiers():
     return notifiers
 
 
-def run_scan_once():
+def run_scan_once(force: bool = False):
     """Run a single scan and print results."""
     logger = logging.getLogger("trading_bot")
     logger.info("Running single scan...")
@@ -63,7 +63,7 @@ def run_scan_once():
     notifiers = build_notifiers()
     scanner = StockScanner(client, notifiers)
 
-    alerts = scanner.scan_all()
+    alerts = scanner.scan_all(force=force)
 
     if not alerts:
         print("\nNo alerts generated. Market may be closed or no signals detected.")
@@ -190,18 +190,19 @@ def main():
     parser.add_argument("--scan-once", action="store_true", help="Run a single scan and exit")
     parser.add_argument("--backtest", type=str, help="Run backtest on a symbol (e.g., AAPL)")
     parser.add_argument("--schedule", action="store_true", help="Run on 15-min schedule")
+    parser.add_argument("--force", action="store_true", help="Bypass market hours check")
 
     args = parser.parse_args()
 
     if args.backtest:
         run_backtest(args.backtest)
     elif args.scan_once:
-        run_scan_once()
+        run_scan_once(force=getattr(args, "force", False))
     elif args.schedule:
         run_scheduler()
     else:
         # Default: single scan
-        run_scan_once()
+        run_scan_once(force=getattr(args, "force", False))
 
 
 if __name__ == "__main__":
