@@ -636,9 +636,205 @@ The question is no longer "Is this possible?"
 
 ---
 
+## Part V: News-Driven Edge Detection (The Easiest Money on Polymarket)
+
+Everything in Parts I-IV focused on mathematical arbitrage — exploiting price inconsistencies through optimization. But there's an even simpler category of profit that doesn't require solving integer programs or running Frank-Wolfe.
+
+It requires reading the news.
+
+### The Information Asymmetry That Hides in Plain Sight
+
+Polymarket prices reflect the consensus of traders who are paying attention. But "paying attention" is doing a lot of heavy lifting. Most traders set positions and walk away. They don't update when new information drops. Prices lag reality — sometimes by hours, sometimes by days.
+
+This creates a different kind of arbitrage: not between correlated markets, but between **what the market believes** and **what the news already tells you**.
+
+You don't need an IP solver for this. You need a system that:
+1. Monitors news sources in real-time
+2. Maps news events to active Polymarket conditions
+3. Identifies markets where prices haven't caught up to publicly available information
+4. Sizes positions based on conviction and time-to-resolution
+
+### Case Study: The Smartest AI Model by End of February
+
+This is the kind of trade that prints money if you're paying attention.
+
+**The Setup:**
+
+Polymarket had a market: *"Smartest AI model by end of February?"*
+
+Prices before Anthropic's announcement:
+| Outcome | Price |
+|---------|-------|
+| Google (Gemini) | $0.90 |
+| Anthropic (Claude) | $0.06 |
+| OpenAI | ~$0.03 |
+| Other | ~$0.01 |
+
+Gemini was trading at 90 cents. Anthropic at 6 cents. The market was pricing in Gemini as a near-certainty.
+
+**What the news told you:**
+
+Anthropic had a confirmed upcoming Claude release scheduled for that same week. Benchmark leaks and industry chatter strongly suggested it would be a major capability jump. This wasn't insider information — it was publicly available if you were following AI news, developer forums, and Anthropic's own communications.
+
+The market was pricing Anthropic at 6% while a potentially benchmark-topping release was days away.
+
+**What happened:**
+
+The new Claude model dropped. Within a day:
+| Outcome | Price Before | Price After |
+|---------|-------------|-------------|
+| Google (Gemini) | $0.90 | $0.40 |
+| Anthropic (Claude) | $0.06 | $0.59 |
+
+Anthropic went from $0.06 to $0.59. That's nearly a **10x return** in 24 hours.
+
+If you bought $1,000 worth of Anthropic YES shares at $0.06, you held ~16,667 shares. At $0.59, those shares were worth $9,833.
+
+**Profit: ~$8,833 on a $1,000 position. In one day.**
+
+And this wasn't even the final resolution — the market was still open. If Anthropic ultimately wins the "smartest model" designation at month end, those shares pay out $1.00 each. Your $1,000 becomes $16,667.
+
+### Why These Opportunities Exist
+
+This seems too obvious. If the information was public, why didn't the market price it in?
+
+Three reasons:
+
+**Reason 1: Stale positions.** Most traders who bought Gemini at $0.70-$0.90 did so weeks earlier when Gemini was genuinely leading benchmarks. They aren't monitoring the market daily. Their positions sit there, propping up the price, until a catalyst forces repricing.
+
+**Reason 2: Uncertainty discounting.** Even traders who knew about Anthropic's upcoming release couldn't be certain it would beat Gemini. The market was pricing the *probability* of an upset, not the *certainty*. At $0.06, the market was saying "there's a 6% chance Anthropic releases something that tops Gemini." That was probably too low given the signals, but it wasn't zero-information pricing.
+
+**Reason 3: Thin liquidity on long-shot outcomes.** The Anthropic YES side had thin order books. Even if a few smart traders wanted to buy, they couldn't move $100K into the position without pushing the price up significantly. Small traders can capture these edges precisely because they don't move the market.
+
+### Building a News-to-Trade Pipeline
+
+Here's the system architecture for capturing these opportunities consistently:
+
+#### Step 1: News Ingestion
+
+Monitor these sources in real-time:
+- **Twitter/X** — AI researchers, company accounts, journalists
+- **Press releases** — Company newsrooms, PR wires
+- **GitHub** — Model releases, benchmark repos, paper submissions
+- **Reddit/HackerNews** — Community discussion often surfaces leaks
+- **Regulatory filings** — SEC, election commissions, government databases
+- **Sports APIs** — Live scores, injury reports, lineup changes
+- **Weather services** — For weather-dependent markets
+
+Set up keyword alerts and RSS feeds. The goal is to know about market-relevant events within minutes, not hours.
+
+#### Step 2: Market Mapping
+
+Maintain a mapping between news categories and active Polymarket conditions:
+
+```
+AI model release → "Smartest AI model" markets
+Political poll → Election outcome markets
+Sports injury → Game winner markets
+Geopolitical event → Leader/conflict markets
+Economic data → Rate decision markets
+```
+
+When a news event fires, immediately pull current prices for all mapped markets.
+
+#### Step 3: Edge Assessment
+
+For each mapped market, ask:
+- **Does this news materially change the probability?** A rumor changes things differently than a confirmed release.
+- **Has the market already moved?** Check the price history for the last 30 minutes. If it's already moved 20%, the edge might be gone.
+- **What's the time to resolution?** Markets resolving in 2 days have different dynamics than markets resolving in 2 months.
+- **What's the maximum downside?** If you're wrong, you lose your position. Size accordingly.
+
+#### Step 4: Position Sizing
+
+The Kelly Criterion gives optimal bet sizing:
+
+```
+f* = (p × b - q) / b
+```
+
+Where:
+- **f*** = fraction of bankroll to bet
+- **p** = your estimated probability of winning
+- **b** = odds received (payout ratio minus 1)
+- **q** = 1 - p (probability of losing)
+
+**Example with the Claude trade:**
+
+You estimate Anthropic has a 40% chance of having the smartest model by month end (based on the upcoming release).
+
+- Price: $0.06 (market says 6%)
+- Your estimate: p = 0.40
+- Odds: b = (1/0.06) - 1 = 15.67
+- q = 0.60
+
+```
+f* = (0.40 × 15.67 - 0.60) / 15.67
+f* = (6.27 - 0.60) / 15.67
+f* = 0.362
+```
+
+Kelly says bet 36.2% of your bankroll. In practice, use **half-Kelly** (18.1%) to account for estimation error.
+
+With a $10,000 bankroll: position size = $1,810.
+
+### The Five Patterns to Watch
+
+Not all news-driven edges are equal. These five patterns produce the highest hit rate:
+
+#### Pattern 1: Scheduled Announcements Ignored by the Market
+
+A company announces a product launch date. The relevant Polymarket condition doesn't move. The market is underpricing the announcement because most traders haven't connected the dots.
+
+*The Claude/Anthropic trade was exactly this pattern.*
+
+#### Pattern 2: Settlement Lag on Resolved Events
+
+An event has already happened, but the market hasn't settled yet. Prices drift toward the correct value but don't snap to it.
+
+Example: A political figure resigns. The "Will X remain in office?" market still trades at $0.30 YES because settlement takes time and some traders haven't noticed.
+
+**Buy NO at $0.70, collect $1.00 at settlement. Risk-free 43% return.**
+
+#### Pattern 3: Correlated Events with Independent Pricing
+
+Two markets should move together but don't. One market reacts to news, the other doesn't.
+
+Example: "Will Party X win the presidency?" drops to $0.30, but "Will Party X win the Senate?" stays at $0.65. If the presidential candidate is dragging the whole ticket down, Senate odds should adjust too.
+
+#### Pattern 4: Overreaction to Noise
+
+Markets spike on preliminary data that will be revised. Early poll results, partial vote counts, pre-season rankings.
+
+The contrarian play: fade the spike when the underlying fundamentals haven't changed.
+
+#### Pattern 5: Calendar Mispricings
+
+Markets with time-based conditions where the probability should mechanically change as time passes, but doesn't.
+
+Example: "Will X happen before March 1?" On February 25 with no signs of X happening, this should trade near $0.05. If it's at $0.20, sell.
+
+### Combining News Edge with Mathematical Arbitrage
+
+The best trades combine both:
+
+1. News gives you **directional conviction** — you know which way a price should move
+2. Mathematical arbitrage gives you **structural edge** — you can exploit price inconsistencies across related markets
+
+When the Claude model dropped:
+- **News trade:** Buy Anthropic YES at $0.06 (directional)
+- **Arbitrage trade:** If Anthropic YES rises to $0.59 but the sum of all outcomes exceeds $1.00 (e.g., Gemini $0.40 + Anthropic $0.59 + Others $0.10 = $1.09), sell the overpriced combination
+- **Double dip:** Capture the directional move AND the structural arbitrage that appears during rapid repricing
+
+Rapid price movements create temporary mispricings. The Frank-Wolfe machinery from Parts I-III detects these automatically. News gives you the heads-up that rapid movement is coming, so you can have the system ready.
+
+> **Key takeaway:** Not all profit requires solving integer programs. The simplest edge on Polymarket is reading the news faster than the market reprices. Scheduled announcements, settlement lag, correlated market divergence, overreaction, and calendar mispricings are five repeatable patterns. The Claude/Anthropic trade — buying at $0.06 before a publicly scheduled release that pushed the price to $0.59 — demonstrates that paying attention to upcoming catalysts can yield 10x returns in 24 hours. Build a news ingestion pipeline, map events to markets, assess edge with probability estimates, and size positions with half-Kelly. Then layer mathematical arbitrage on top during the repricing chaos. The traders making millions aren't just running algorithms. They're reading the news while the algorithms run.
+
+---
+
 ## What's Next?
 
-This was Part 2. We covered initialization, stability, profit guarantees, and market maker economics.
+This was Part 2. We covered initialization, stability, profit guarantees, market maker economics, and news-driven edge detection.
 
 But we haven't talked about the production system.
 
