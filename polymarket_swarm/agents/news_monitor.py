@@ -4,13 +4,49 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import html
+import re
 import time
+import xml.etree.ElementTree as ET
 
 import aiohttp
-import feedparser
 
 from ..base_agent import BaseAgent
 from ..types import Message, MessageType, NewsItem
+
+
+def _parse_rss(xml_text: str) -> list[dict]:
+    """Minimal RSS/Atom parser using stdlib xml."""
+    entries: list[dict] = []
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError:
+        return entries
+
+    # RSS 2.0
+    for item in root.iter("item"):
+        title = (item.findtext("title") or "").strip()
+        link = (item.findtext("link") or "").strip()
+        desc = (item.findtext("description") or "").strip()
+        pub = (item.findtext("pubDate") or "").strip()
+        # Strip HTML tags from description
+        desc = re.sub(r"<[^>]+>", " ", html.unescape(desc))
+        desc = re.sub(r"\s+", " ", desc).strip()
+        entries.append({"title": title, "link": link, "summary": desc, "published": pub})
+
+    # Atom
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+    for entry in root.iter("{http://www.w3.org/2005/Atom}entry"):
+        title = (entry.findtext("atom:title", "", ns) or entry.findtext("title") or "").strip()
+        link_el = entry.find("atom:link[@href]", ns) or entry.find("link[@href]")
+        link = link_el.get("href", "") if link_el is not None else ""
+        summary = (entry.findtext("atom:summary", "", ns) or entry.findtext("atom:content", "", ns) or "").strip()
+        summary = re.sub(r"<[^>]+>", " ", html.unescape(summary))
+        summary = re.sub(r"\s+", " ", summary).strip()
+        pub = (entry.findtext("atom:published", "", ns) or entry.findtext("atom:updated", "", ns) or "").strip()
+        entries.append({"title": title, "link": link, "summary": summary, "published": pub})
+
+    return entries
 
 
 class NewsMonitorAgent(BaseAgent):
@@ -60,14 +96,13 @@ class NewsMonitorAgent(BaseAgent):
             self.logger.debug("Fetch failed %s: %s", url, exc)
             return items
 
-        feed = feedparser.parse(text)
+        entries = _parse_rss(text)
         keywords = [kw.lower() for kw in self.config.news.keywords]
 
-        for entry in feed.entries[:20]:
-            title = getattr(entry, "title", "")
-            summary = getattr(entry, "summary", "")
-            link = getattr(entry, "link", "")
-            published = getattr(entry, "published_parsed", None)
+        for entry in entries[:20]:
+            title = entry.get("title", "")
+            summary = entry.get("summary", "")
+            link = entry.get("link", "")
 
             content_lower = f"{title} {summary}".lower()
             matched = [kw for kw in keywords if kw in content_lower]
@@ -80,14 +115,12 @@ class NewsMonitorAgent(BaseAgent):
                 continue
             self._seen.add(fingerprint)
 
-            pub_ts = time.mktime(published) if published else time.time()
-
             items.append(NewsItem(
                 title=title,
                 summary=summary[:500],
                 source=url,
                 url=link,
-                published=pub_ts,
+                published=time.time(),
                 keywords_matched=matched,
                 relevance_score=min(1.0, len(matched) * 0.25),
             ))
